@@ -9,6 +9,28 @@ import kotlinx.coroutines.flow.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+/**
+ * [Pagination] helps to paginate a query.
+ * Use [paginateIn] factory method to create an instance of [Pagination].
+ *
+ *
+ * Usage
+ * ```
+ * // Create an instance of Pagination
+ * val paginationSource = query.paginateIn(coroutineScope)
+ *
+ * // Collect documents
+ * paginationSource.documents
+ *      .onEach { snaps ->
+ *          // Cumulative list of document snapshots
+ *      }.launchIn(coroutineScope)
+ *
+ * // To fetch documents
+ * paginationSource.fetch(10L)
+ *
+ *
+ * ```
+ * */
 class Pagination private constructor(private val externalScope: CoroutineScope, baseQuery : Query, private val source: Source) {
 
     @Volatile private var query = baseQuery
@@ -69,6 +91,7 @@ class Pagination private constructor(private val externalScope: CoroutineScope, 
          * Returns an instance of [Pagination].
          *
          * @param externalScope the scope to which the instance of [Pagination] is tied to.
+         * @param source the source from which the documents must be fetched
          * */
         fun Query.paginateIn(externalScope: CoroutineScope, source: Source = Source.DEFAULT) = Pagination(externalScope, this, source)
     }
