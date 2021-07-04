@@ -15,7 +15,14 @@ class TypedPagination<T> private constructor(externalScope: CoroutineScope, base
     @ExperimentalCoroutinesApi
     val allDocuments = pagination.documents.map { it.map(transformer::transform) }
 
+    fun fetch(count : Long) = pagination.fetch(count)
+
     companion object {
+        /**
+         * Returns an instance of [TypedPagination] of type [T].
+         *
+         * @param externalScope the scope which the instance of [TypedPagination] is tied to.
+         * */
         fun <T> Query.paginateIn(externalScope: CoroutineScope, transformer: Transformer<T>, source: Source = Source.DEFAULT) =
             TypedPagination(externalScope, this, transformer, source)
     }

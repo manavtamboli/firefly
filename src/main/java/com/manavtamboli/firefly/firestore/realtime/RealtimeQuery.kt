@@ -20,7 +20,8 @@ import kotlin.coroutines.cancellation.CancellationException
  * - get cancelled if Firestore API result in a failure
  * - get cancelled if [callbackFlow] API cannot send result downstream.
  *
- * Important : The list emitted in the flow is cumulative and not individual document changes.
+ * The list emitted in the flow is cumulative and not individual document changes.
+ * To get only document changes, see [Query.realtimeChanges].
  *
  * Sample Usage :
  * ```

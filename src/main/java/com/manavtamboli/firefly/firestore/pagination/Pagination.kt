@@ -5,10 +5,7 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.runningReduce
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -31,7 +28,7 @@ class Pagination private constructor(private val externalScope: CoroutineScope, 
         querySnapshot.documents.lastOrNull()?.let { lastVisible = it }
     }
 
-    private suspend fun suspendFetch(count : Long) : List<DocumentSnapshot> {
+    private suspend fun fetchNextBatch(count : Long) : List<DocumentSnapshot> {
         if (lastItemReached) return emptyList()
         val finalQuery = getQuery(count)
         return suspendCancellableCoroutine { continuation ->
@@ -46,6 +43,9 @@ class Pagination private constructor(private val externalScope: CoroutineScope, 
 
     private val batched = MutableSharedFlow<List<DocumentSnapshot>>(extraBufferCapacity = 64)
 
+    /**
+     * A [SharedFlow] which emits cumulative list of all documents fetched.
+     **/
     @ExperimentalCoroutinesApi
     val documents =
         batched.runningReduce { accumulator, value -> accumulator + value }
@@ -53,19 +53,22 @@ class Pagination private constructor(private val externalScope: CoroutineScope, 
 
     /**
      * Starts fetching the next batch of size [count].
+     * If the [externalScope] is cancelled, then this function will have no effect.
+     *
+     * @param count Number of documents to fetch.
      * */
     fun fetch(count: Long){
         externalScope.launch(Dispatchers.IO) {
-            val nextBatch = suspendFetch(count)
+            val nextBatch = fetchNextBatch(count)
             batched.tryEmit(nextBatch)
         }
     }
 
     companion object {
         /**
-         * Paginates the query.
+         * Returns an instance of [Pagination].
          *
-         * @return An instance of [Pagination].
+         * @param externalScope the scope to which the instance of [Pagination] is tied to.
          * */
         fun Query.paginateIn(externalScope: CoroutineScope, source: Source = Source.DEFAULT) = Pagination(externalScope, this, source)
     }
