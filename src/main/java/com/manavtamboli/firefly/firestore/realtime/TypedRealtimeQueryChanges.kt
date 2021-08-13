@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.transform
 @ExperimentalCoroutinesApi
 fun <T> Query.realtimeChanges(transformer: Transformer<T>) = realtimeChanges().map { it.map { change -> transformer.transform(change.document) to change.type } }
 
+fun <T> Flow<List<Pair<T, Type>>>.added() = map { it.filter { (_, type) -> type == ADDED }.map { (value, _) -> value } }
+
 fun <T> Flow<List<Pair<T, Type>>>.onAdded(action : suspend (T) -> Unit) = transform { changes ->
     changes.groupBy { it.second }.let {
         it[ADDED]?.forEach { pair -> action.invoke(pair.first) }

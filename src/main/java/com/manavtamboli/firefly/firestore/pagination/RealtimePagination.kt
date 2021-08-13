@@ -5,6 +5,7 @@ import com.google.firebase.firestore.DocumentChange.Type.*
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
+import com.manavtamboli.firefly.firestore.realtime.onAdded
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -38,8 +39,7 @@ class RealtimePagination private constructor(externalScope: CoroutineScope, base
 
     private val _flows = MutableSharedFlow<Flow<List<DocumentChange>>>(extraBufferCapacity = 64)
 
-    val documents = _flows
-        .flattenMerge(Int.MAX_VALUE)
+    val documents = changes()
         .runningFold(emptyList<DocumentSnapshot>()){ snaps, newChanges ->
             snaps.toMutableList().apply {
                 newChanges.forEach {
@@ -58,6 +58,10 @@ class RealtimePagination private constructor(externalScope: CoroutineScope, base
         .conflate()
         .shareIn(externalScope, SharingStarted.Eagerly, replay = 1)
 
+    /**
+     * Note : Start collecting before calling fetch for first time, or it will result in data loss.
+     * */
+    fun changes() : Flow<List<DocumentChange>>  = _flows.flattenMerge(Int.MAX_VALUE)
 
     fun fetch(count : Long) : Boolean {
         if (lastItemReached) return false

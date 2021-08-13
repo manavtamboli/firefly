@@ -72,6 +72,15 @@ fun Query.realtimeChanges() = callbackFlow<List<DocumentChange>> {
     awaitClose { registration.remove() }
 }
 
+// TODO : Remove if not necessary
+fun Flow<List<DocumentChange>>.onEmpty(action : suspend () -> Unit) = transform { changes ->
+    if (changes.isEmpty()) action()
+    else emit(changes)
+}
+
+
+fun Flow<List<DocumentChange>>.added() = map { it.filter { change -> change.type == ADDED } }
+
 /**
  * A flow operator that invokes [action] on each document change with type [ADDED] and
  * returns a flow containing document changes only with type [MODIFIED] and [REMOVED].
