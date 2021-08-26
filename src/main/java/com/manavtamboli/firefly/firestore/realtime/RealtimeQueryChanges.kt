@@ -82,8 +82,7 @@ fun Flow<List<DocumentChange>>.onEmpty(action : suspend () -> Unit) = transform 
 fun Flow<List<DocumentChange>>.added() = map { it.filter { change -> change.type == ADDED } }
 
 /**
- * A flow operator that invokes [action] on each document change with type [ADDED] and
- * returns a flow containing document changes only with type [MODIFIED] and [REMOVED].
+ * A flow operator that invokes [action] on each document change with type [ADDED].
  *
  *
  * Usage
@@ -94,34 +93,17 @@ fun Flow<List<DocumentChange>>.added() = map { it.filter { change -> change.type
  *      }.launchIn(coroutineScope)
  * ```
  *
- * ###
- * ### Important
- * All the document changes with type [ADDED] are consumed and are not emitted downstream.
- * ```
- * query.realtimeChanges()
- *      .onAdded { snap ->
- *          Log.i(TAG, "A document was added. Added Document: $snap")
- *      }
- *      .onEach { change ->
- *          // only changes with type MODIFIED and REMOVED are available here.
- *      }.launchIn(coroutineScope)
- * ```
- *
  * @param action the action to invoke when a document is added.
- *
- * @return A flow which contains only document changes of Type [MODIFIED] and [REMOVED]
  * */
-fun Flow<List<DocumentChange>>.onAdded(action : suspend (DocumentSnapshot) -> Unit) = transform { changes ->
-    changes.groupBy { change -> change.type }.let {
-        it[ADDED]?.forEach { change -> action(change.document) }
-        emit((it[MODIFIED] ?: emptyList()) + (it[REMOVED] ?: emptyList()))
+fun Flow<List<DocumentChange>>.onAdded(action : suspend (DocumentSnapshot) -> Unit) = onEach {
+    it.forEach { doc ->
+        if (doc.type == ADDED) action(doc.document)
     }
 }
 
+
 /**
- * A flow operator that invokes [action] on each document change with type [MODIFIED] and
- * returns a flow containing document changes only with type [ADDED] and [REMOVED].
- *
+ * A flow operator that invokes [action] on each document change with type [MODIFIED].
  *
  * Usage
  * ```
@@ -131,33 +113,16 @@ fun Flow<List<DocumentChange>>.onAdded(action : suspend (DocumentSnapshot) -> Un
  *      }.launchIn(coroutineScope)
  * ```
  *
- * ###
- * ### Important
- * All the document changes with type [MODIFIED] are consumed and are not emitted downstream.
- * ```
- * query.realtimeChanges()
- *      .onAdded { snap ->
- *          Log.i(TAG, "A document was modified. Modified Document: $snap")
- *      }
- *      .onEach { change ->
- *          // only changes with type ADDED and REMOVED are available here.
- *      }.launchIn(coroutineScope)
- * ```
- *
  * @param action the action to invoke when a document is modified.
- *
- * @return A flow which contains only document changes of Type [ADDED] and [REMOVED]
  * */
-fun Flow<List<DocumentChange>>.onModified(action : suspend (DocumentSnapshot) -> Unit) = transform { changes ->
-    changes.groupBy { change -> change.type }.let {
-        it[MODIFIED]?.forEach { change -> action(change.document) }
-        emit((it[ADDED] ?: emptyList()) + (it[REMOVED] ?: emptyList()))
+fun Flow<List<DocumentChange>>.onModified(action : suspend (DocumentSnapshot) -> Unit) = onEach {
+    it.forEach { doc ->
+        if (doc.type == MODIFIED) action(doc.document)
     }
 }
 
 /**
- * A flow operator that invokes [action] on each document change with type [REMOVED] and
- * returns a flow containing document changes only with type [ADDED] and [MODIFIED].
+ * A flow operator that invokes [action] on each document change with type [REMOVED].
  *
  *
  * Usage
@@ -168,26 +133,10 @@ fun Flow<List<DocumentChange>>.onModified(action : suspend (DocumentSnapshot) ->
  *      }.launchIn(coroutineScope)
  * ```
  *
- * ###
- * ### Important
- * All the document changes with type [REMOVED] are consumed and are not emitted downstream.
- * ```
- * query.realtimeChanges()
- *      .onAdded { snap ->
- *          Log.i(TAG, "A document was removed. Removed Document: $snap")
- *      }
- *      .onEach { change ->
- *          // only changes with type ADDED and MODIFIED are available here.
- *      }.launchIn(coroutineScope)
- * ```
- *
  * @param action the action to invoke when a document is removed.
- *
- * @return A flow which contains only document changes of Type [ADDED] and [MODIFIED]
  * */
-fun Flow<List<DocumentChange>>.onRemoved(action : suspend (DocumentSnapshot) -> Unit) = transform { changes ->
-    changes.groupBy { change -> change.type }.let {
-        it[REMOVED]?.forEach { change -> action(change.document) }
-        emit((it[ADDED] ?: emptyList()) + (it[MODIFIED] ?: emptyList()))
+fun Flow<List<DocumentChange>>.onRemoved(action : suspend (DocumentSnapshot) -> Unit) =onEach {
+    it.forEach { doc ->
+        if (doc.type == REMOVED) action(doc.document)
     }
 }

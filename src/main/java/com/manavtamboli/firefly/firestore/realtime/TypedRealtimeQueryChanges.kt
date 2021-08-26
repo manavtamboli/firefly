@@ -7,6 +7,7 @@ import com.manavtamboli.firefly.firestore.Transformer
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.transform
 
 @ExperimentalCoroutinesApi
@@ -14,23 +15,21 @@ fun <T> Query.realtimeChanges(transformer: Transformer<T>) = realtimeChanges().m
 
 fun <T> Flow<List<Pair<T, Type>>>.added() = map { it.filter { (_, type) -> type == ADDED }.map { (value, _) -> value } }
 
-fun <T> Flow<List<Pair<T, Type>>>.onAdded(action : suspend (T) -> Unit) = transform { changes ->
-    changes.groupBy { it.second }.let {
-        it[ADDED]?.forEach { pair -> action.invoke(pair.first) }
-        emit((it[MODIFIED] ?: emptyList()) + (it[REMOVED] ?: emptyList()))
+fun <T> Flow<List<Pair<T, Type>>>.onAdded(action : suspend (T) -> Unit) = onEach {
+    it.forEach { (value, type) ->
+        if (type == ADDED) action(value)
     }
 }
 
-fun <T> Flow<List<Pair<T, Type>>>.onModified(action : suspend (T) -> Unit) = transform { changes ->
-    changes.groupBy { it.second }.let {
-        it[MODIFIED]?.forEach { pair -> action.invoke(pair.first) }
-        emit((it[ADDED] ?: emptyList()) + (it[REMOVED] ?: emptyList()))
+fun <T> Flow<List<Pair<T, Type>>>.onModified(action : suspend (T) -> Unit) = onEach {
+    it.forEach { (value, type) ->
+        if (type == MODIFIED) action(value)
     }
 }
 
-fun <T> Flow<List<Pair<T, Type>>>.onRemoved(action : suspend (T) -> Unit) = transform { changes ->
-    changes.groupBy { it.second }.let {
-        it[REMOVED]?.forEach { pair -> action.invoke(pair.first) }
-        emit((it[ADDED] ?: emptyList()) + (it[MODIFIED] ?: emptyList()))
+
+fun <T> Flow<List<Pair<T, Type>>>.onRemoved(action : suspend (T) -> Unit) = onEach {
+    it.forEach { (value, type) ->
+        if (type == REMOVED) action(value)
     }
 }
