@@ -12,7 +12,6 @@ class TypedPagination<T> private constructor(externalScope: CoroutineScope, base
 
     private val pagination = baseQuery.paginateIn(externalScope, source)
 
-    @ExperimentalCoroutinesApi
     val allDocuments = pagination.documents.map { it.map(transformer::transform) }
 
     fun fetch(count : Long) = pagination.fetch(count)

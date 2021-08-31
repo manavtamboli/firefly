@@ -74,6 +74,5 @@ fun DocumentReference.realtime() = callbackFlow {
  *
  * @return A cold flow which emits realtime updates of the document mapped to [T].
  * */
-@ExperimentalCoroutinesApi
 fun <T> DocumentReference.realtime(transformer: Transformer<T>) = realtime().map { if (it.exists()) transformer.transform(it) else null }
 
