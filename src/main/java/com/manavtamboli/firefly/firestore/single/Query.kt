@@ -4,6 +4,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Source
+import com.manavtamboli.firefly.await
 import com.manavtamboli.firefly.firestore.Transformer
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -26,11 +27,8 @@ import kotlin.coroutines.resumeWithException
  *
  * @throws FirebaseFirestoreException Any exception thrown by the official Firestore API.
  * */
-suspend fun Query.fetch() : List<DocumentSnapshot> = suspendCancellableCoroutine { continuation ->
-    get()
-        .addOnSuccessListener { continuation.resume(it.documents) }
-        .addOnFailureListener { continuation.resumeWithException(it) }
-}
+suspend fun Query.fetch() : List<DocumentSnapshot> = get().await().documents
+
 
 /**
  * Fetches this query once with the given [source].
@@ -50,11 +48,8 @@ suspend fun Query.fetch() : List<DocumentSnapshot> = suspendCancellableCoroutine
  *
  * @throws FirebaseFirestoreException Any exception thrown by the official Firestore API.
  * */
-suspend fun Query.fetchWith(source: Source) : List<DocumentSnapshot> = suspendCancellableCoroutine { continuation ->
-    get(source)
-        .addOnSuccessListener { continuation.resume(it.documents) }
-        .addOnFailureListener { continuation.resumeWithException(it) }
-}
+suspend fun Query.fetchWith(source: Source) : List<DocumentSnapshot> = get(source).await().documents
+
 
 /**
  * Fetches this query once and applies the given [transformer] on each item.

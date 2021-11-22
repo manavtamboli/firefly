@@ -1,13 +1,11 @@
 package com.manavtamboli.firefly.firestore.single
 
-import com.manavtamboli.firefly.firestore.Transformer
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Source
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
+import com.manavtamboli.firefly.await
+import com.manavtamboli.firefly.firestore.Transformer
 
 /**
  * Fetches this document once.
@@ -26,11 +24,8 @@ import kotlin.coroutines.resumeWithException
  *
  * @throws FirebaseFirestoreException Any exception thrown by the official Firestore API.
  * */
-suspend fun DocumentReference.fetch() : DocumentSnapshot = suspendCancellableCoroutine { continuation ->
-    get()
-        .addOnSuccessListener { continuation.resume(it) }
-        .addOnFailureListener { continuation.resumeWithException(it) }
-}
+suspend fun DocumentReference.fetch() : DocumentSnapshot = get().await()
+
 
 /**
  * Fetches this document once with the given [source].
@@ -51,11 +46,8 @@ suspend fun DocumentReference.fetch() : DocumentSnapshot = suspendCancellableCor
  *
  * @throws FirebaseFirestoreException Any exception thrown by the official Firestore API.
  * */
-suspend fun DocumentReference.fetchWith(source: Source) : DocumentSnapshot = suspendCancellableCoroutine { continuation ->
-    get(source)
-        .addOnSuccessListener { continuation.resume(it) }
-        .addOnFailureListener { continuation.resumeWithException(it) }
-}
+suspend fun DocumentReference.fetchWith(source: Source) : DocumentSnapshot = get(source).await()
+
 
 /**
  * Fetches this document once and applies the given [transformer] on it.
@@ -77,7 +69,10 @@ suspend fun DocumentReference.fetchWith(source: Source) : DocumentSnapshot = sus
  * @throws FirebaseFirestoreException Any exception thrown by the official Firestore API.
  * @throws Exception Any exception thrown by the given [transformer].
  * */
-suspend fun <T> DocumentReference.fetch(transformer: Transformer<T>) = fetch().let { if (it.exists()) transformer.transform(it) else null }
+suspend fun <T> DocumentReference.fetch(transformer: Transformer<T>) = fetch().let {
+    if (it.exists()) transformer.transform(it)
+    else null
+}
 
 /**
  * Fetches this document once with the given [source] and applies the given [transformer] on it.
@@ -100,4 +95,7 @@ suspend fun <T> DocumentReference.fetch(transformer: Transformer<T>) = fetch().l
  * @throws FirebaseFirestoreException Any exception thrown by the official Firestore API.
  * @throws Exception Any exception thrown by the given [transformer].
  * */
-suspend fun <T> DocumentReference.fetchWith(source: Source, transformer: Transformer<T>) = fetchWith(source).let { if (it.exists()) transformer.transform(it) else null }
+suspend fun <T> DocumentReference.fetchWith(source: Source, transformer: Transformer<T>) = fetchWith(source).let {
+    if (it.exists()) transformer.transform(it)
+    else null
+}
