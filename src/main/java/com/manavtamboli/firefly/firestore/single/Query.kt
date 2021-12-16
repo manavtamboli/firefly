@@ -6,9 +6,6 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Source
 import com.manavtamboli.firefly.await
 import com.manavtamboli.firefly.firestore.Transformer
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 /**
  * Fetches this query once.
